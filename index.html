@@ -1,0 +1,48 @@
+<html>
+
+<head>
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Zoom POC</h1>
+
+    <div class=" document-viewer">
+        <div class="image-wrapper" id="wrapper">
+            <img id="image" src="image.jpg" alt="test image" />
+        </div>
+    </div>
+</body>
+<script src="touch-emulator.js"></script>
+<script>
+    TouchEmulator();
+</script>
+<script type="text/javascript" src="hammer.min.js"></script>
+<script>
+    function log(ev) {
+        console.log(ev);
+    }
+
+    // document.body.addEventListener('touchstart', log, false);
+    // document.body.addEventListener('touchmove', log, false);
+    // document.body.addEventListener('touchend', log, false);
+    var image = document.getElementById('image');
+    var wrapper = document.getElementById('wrapper');
+    var mc = new Hammer.Manager(wrapper);
+    mc.add(new Hammer.Pinch());
+    mc.get('pinch').set({ enable: true });
+    mc.on('pinch', function (ev) {
+        console.log(ev);
+        // if (image.style.transform) {
+        //     image.style = undefined;
+        // } else {
+        //     image.style = 'transform: scale(2) translate(' + ev.center.x + 'px, ' + ev.center.y + 'px);'
+        // }
+    })
+
+</script>
+
+</html>
