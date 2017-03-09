@@ -34,21 +34,31 @@
 
     mc.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
     mc.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([mc.get('pan')]);
-    mc.get('pinch').set({ enable: true });
+    mc.add(new Hammer.Tap({ event: 'doubletap', taps: 2 }));
 
-    var initScale = 1;
+    var adjustScale = 1;
+    var adjustDeltaX = Math.round((window.innerWidth - el.offsetWidth) / 2);
+    var adjustDeltaY = Math.round((window.innerHeight - el.offsetHeight) / 2);
 
-    var START_X = Math.round((window.innerWidth - el.offsetWidth) / 2);
-    var START_Y = Math.round((window.innerHeight - el.offsetHeight) / 2);
+    var resetScale = adjustScale;
+    var resetDeltaX = adjustDeltaX;
+    var resetDeltaY = adjustDeltaY;
+
+    var currentScale = null;
+    var currentDeltaX = null;
+    var currentDeltaY = null;
 
     function resetElement() {
         el.className = 'animate';
-        transform = {
-            translate: { x: START_X, y: START_Y },
-            scale: 1
-        };
+        var value = [
+            'translate3d(' + resetDeltaX + 'px, ' + resetDeltaY + 'px, 0)',
+            'scale(' + 1 + ')'
+        ];
 
-        requestElementUpdate();
+        value = value.join(" ");
+        el.style.webkitTransform = value;
+        el.style.mozTransform = value;
+        el.style.transform = value;
     }
 
     var reqAnimationFrame = (function () {
@@ -59,8 +69,8 @@
 
     function updateElementTransform() {
         var value = [
-            'translate3d(' + transform.translate.x + 'px, ' + transform.translate.y + 'px, 0)',
-            'scale(' + transform.scale + ', ' + transform.scale + ')'
+            'translate3d(' + currentDeltaX + 'px, ' + currentDeltaY + 'px, 0)',
+            'scale(' + currentScale + ')'
         ];
 
         value = value.join(" ");
@@ -79,25 +89,35 @@
 
     mc.on('pan', function (ev) {
         el.className = '';
-        transform.translate = {
-            x: START_X + ev.deltaX,
-            y: START_Y + ev.deltaY
-        };
+
+        if (currentScale > 1) {
+            currentDeltaX = adjustDeltaX + ev.deltaX;
+            currentDeltaY = adjustDeltaY + ev.deltaY;
+        }
 
         requestElementUpdate();
     });
 
     mc.on('pinch', function (ev) {
-        if (ev.type == 'pinchstart') {
-            initScale = transform.scale || 1;
-        }
-
         el.className = '';
-        if (ev.scale >= 1) {
-            transform.scale = initScale * ev.scale;
+        if ((adjustScale * ev.scale) >= 1) {
+            currentScale = adjustScale * ev.scale;
         }
 
         requestElementUpdate();
+    });
+
+    mc.on("pinchend", function (ev) {
+        adjustScale = currentScale;
+    });
+
+    mc.on("panend", function (ev) {
+        adjustDeltaX = currentDeltaX;
+        adjustDeltaY = currentDeltaY;
+    });
+
+    mc.on("doubletap", function (ev) {
+        resetElement();
     });
 
     resetElement();

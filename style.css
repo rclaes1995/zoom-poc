@@ -12,7 +12,7 @@ h1 {
 .document-viewer {
     position: relative;
     overflow: hidden;
-    height: 100%;
+    height: 1100px;
 }
 
 .image-wrapper {
