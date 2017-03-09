@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -32,7 +33,7 @@
 
     var mc = new Hammer.Manager(el);
 
-    mc.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
+    mc.add(new Hammer.Pan({ threshold: 0, pointers: 2 }));
     mc.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([mc.get('pan')]);
     mc.add(new Hammer.Tap({ event: 'doubletap', taps: 2 }));
 
@@ -48,12 +49,30 @@
     var currentDeltaX = null;
     var currentDeltaY = null;
 
+    function initializeElement() {
+        el.className = 'animate';
+        var value = [
+            'translate3d(' + resetDeltaX + 'px, ' + resetDeltaY + 'px, 0)',
+            'scale(' + 1 + ')'
+        ];
+
+
+        value = value.join(" ");
+        el.style.webkitTransform = value;
+        el.style.mozTransform = value;
+        el.style.transform = value;
+    }
+
     function resetElement() {
         el.className = 'animate';
         var value = [
             'translate3d(' + resetDeltaX + 'px, ' + resetDeltaY + 'px, 0)',
             'scale(' + 1 + ')'
         ];
+
+        currentScale = 1;
+        currentDeltaX = resetDeltaX;
+        currentDeltaY = resetDeltaY;
 
         value = value.join(" ");
         el.style.webkitTransform = value;
@@ -120,7 +139,7 @@
         resetElement();
     });
 
-    resetElement();
+    initializeElement();
 
 </script>
 
