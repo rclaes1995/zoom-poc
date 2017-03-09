@@ -19,29 +19,88 @@
 <script src="touch-emulator.js"></script>
 <script>
     TouchEmulator();
+
 </script>
 <script type="text/javascript" src="hammer.min.js"></script>
 <script>
-    function log(ev) {
-        console.log(ev);
+    var image = document.getElementById('image');
+    var el = document.getElementById('wrapper');
+
+    var ticking = false;
+    var transform;
+    var timer;
+
+    var mc = new Hammer.Manager(el);
+
+    mc.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
+    mc.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([mc.get('pan')]);
+    mc.get('pinch').set({ enable: true });
+
+    var initScale = 1;
+
+    var START_X = Math.round((window.innerWidth - el.offsetWidth) / 2);
+    var START_Y = Math.round((window.innerHeight - el.offsetHeight) / 2);
+
+    function resetElement() {
+        el.className = 'animate';
+        transform = {
+            translate: { x: START_X, y: START_Y },
+            scale: 1
+        };
+
+        requestElementUpdate();
     }
 
-    // document.body.addEventListener('touchstart', log, false);
-    // document.body.addEventListener('touchmove', log, false);
-    // document.body.addEventListener('touchend', log, false);
-    var image = document.getElementById('image');
-    var wrapper = document.getElementById('wrapper');
-    var mc = new Hammer.Manager(wrapper);
-    mc.add(new Hammer.Pinch());
-    mc.get('pinch').set({ enable: true });
+    var reqAnimationFrame = (function () {
+        return window[Hammer.prefixed(window, 'requestAnimationFrame')] || function (callback) {
+            window.setTimeout(callback, 1000 / 60);
+        };
+    })();
+
+    function updateElementTransform() {
+        var value = [
+            'translate3d(' + transform.translate.x + 'px, ' + transform.translate.y + 'px, 0)',
+            'scale(' + transform.scale + ', ' + transform.scale + ')'
+        ];
+
+        value = value.join(" ");
+        el.style.webkitTransform = value;
+        el.style.mozTransform = value;
+        el.style.transform = value;
+        ticking = false;
+    }
+
+    function requestElementUpdate() {
+        if (!ticking) {
+            reqAnimationFrame(updateElementTransform);
+            ticking = true;
+        }
+    }
+
+    mc.on('pan', function (ev) {
+        el.className = '';
+        transform.translate = {
+            x: START_X + ev.deltaX,
+            y: START_Y + ev.deltaY
+        };
+
+        requestElementUpdate();
+    });
+
     mc.on('pinch', function (ev) {
-        console.log(ev);
-        // if (image.style.transform) {
-        //     image.style = undefined;
-        // } else {
-        //     image.style = 'transform: scale(2) translate(' + ev.center.x + 'px, ' + ev.center.y + 'px);'
-        // }
-    })
+        if (ev.type == 'pinchstart') {
+            initScale = transform.scale || 1;
+        }
+
+        el.className = '';
+        if (ev.scale >= 1) {
+            transform.scale = initScale * ev.scale;
+        }
+
+        requestElementUpdate();
+    });
+
+    resetElement();
 
 </script>
 
