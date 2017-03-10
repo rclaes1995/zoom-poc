@@ -32,9 +32,6 @@
     var timer;
 
     var mc = new Hammer.Manager(el);
-
-    mc.add(new Hammer.Pan({ threshold: 0, pointers: 2 }));
-    mc.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([mc.get('pan')]);
     mc.add(new Hammer.Tap({ event: 'doubletap', taps: 2 }));
 
     var adjustScale = 1;
@@ -48,6 +45,8 @@
     var currentScale = null;
     var currentDeltaX = null;
     var currentDeltaY = null;
+
+    var isZooming = false;
 
     function initializeElement() {
         el.className = 'animate';
@@ -69,6 +68,8 @@
             'translate3d(' + resetDeltaX + 'px, ' + resetDeltaY + 'px, 0)',
             'scale(' + 1 + ')'
         ];
+
+        mc.remove(['pinch', 'pan']);
 
         currentScale = 1;
         currentDeltaX = resetDeltaX;
@@ -109,19 +110,31 @@
     mc.on('pan', function (ev) {
         el.className = '';
 
-        if (currentScale > 1) {
-            currentDeltaX = adjustDeltaX + ev.deltaX;
-            currentDeltaY = adjustDeltaY + ev.deltaY;
+        currentDeltaX = adjustDeltaX + ev.deltaX;
+        currentDeltaY = adjustDeltaY + ev.deltaY;
+
+
+        console.log(currentDeltaX);
+        console.log(el.offsetWidth + '/' + currentScale + ' = ' + el.offsetWidth * currentScale );
+        if (currentDeltaX > (el.offsetWidth / currentScale)) {
+            console.log('HIT LEFT EDGE');
         }
+        if (currentDeltaX < -(el.offsetWidth / currentScale)) {
+            console.log('HIT RIGHT EDGE');
+        }
+
 
         requestElementUpdate();
     });
 
     mc.on('pinch', function (ev) {
         el.className = '';
+        // never allow image to become smaller
+        // than its original size
         if ((adjustScale * ev.scale) >= 1) {
             currentScale = adjustScale * ev.scale;
         }
+
 
         requestElementUpdate();
     });
@@ -136,7 +149,20 @@
     });
 
     mc.on("doubletap", function (ev) {
-        resetElement();
+        if (isZooming) {
+            // disable zoom mode
+            resetElement();
+            isZooming = false;
+        } else {
+            // enable zoom mode
+            mc.add(new Hammer.Pan({ threshold: 0 }));
+            mc.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([mc.get('pan')]);
+
+            currentScale = 2;
+            adjustScale = 2;
+            requestElementUpdate();
+            isZooming = true;
+        }
     });
 
     initializeElement();
